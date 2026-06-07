@@ -1,0 +1,42 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Company name"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Primary contact name"
+    },
+    "contact_phone": {
+      "type": "string",
+      "description": "Primary phone"
+    },
+    "contact_email": {
+      "type": "string",
+      "description": "Email"
+    },
+    "credit_status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending",
+        "suspended",
+        "cod"
+      ],
+      "default": "pending"
+    },
+    "credit_limit": {
+      "type": "number",
+      "description": "Credit limit in USD"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

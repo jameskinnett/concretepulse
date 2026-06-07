@@ -1,0 +1,46 @@
+{
+  "name": "Truck",
+  "type": "object",
+  "properties": {
+    "truck_id": {
+      "type": "string",
+      "description": "Internal truck number e.g. T-01"
+    },
+    "plate": {
+      "type": "string",
+      "description": "License plate"
+    },
+    "capacity_m3": {
+      "type": "number",
+      "description": "Capacity in cubic meters"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "in_transit",
+        "loading",
+        "maintenance",
+        "off_duty"
+      ],
+      "default": "available"
+    },
+    "current_driver_id": {
+      "type": "string"
+    },
+    "current_driver_name": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "truck_id",
+    "plate",
+    "capacity_m3"
+  ]
+}

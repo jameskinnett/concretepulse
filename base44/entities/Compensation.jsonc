@@ -1,0 +1,60 @@
+{
+  "name": "Compensation",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "time_hours": {
+      "type": "number"
+    },
+    "orders_count": {
+      "type": "number",
+      "default": 1
+    },
+    "distance_km": {
+      "type": "number"
+    },
+    "primary_rate": {
+      "type": "number"
+    },
+    "secondary_rate": {
+      "type": "number"
+    },
+    "calculated_amount": {
+      "type": "number"
+    },
+    "final_amount": {
+      "type": "number"
+    },
+    "is_overridden": {
+      "type": "boolean",
+      "default": false
+    },
+    "override_note": {
+      "type": "string"
+    },
+    "calculation_method": {
+      "type": "string",
+      "enum": [
+        "hourly",
+        "per_order",
+        "per_km",
+        "mixed"
+      ]
+    }
+  },
+  "required": [
+    "order_id",
+    "driver_id"
+  ]
+}

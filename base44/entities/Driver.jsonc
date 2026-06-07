@@ -1,0 +1,56 @@
+{
+  "name": "Driver",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "cedula": {
+      "type": "string",
+      "description": "National ID / Cedula"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "employee",
+        "contractor"
+      ],
+      "default": "employee"
+    },
+    "availability": {
+      "type": "string",
+      "enum": [
+        "available",
+        "on_route",
+        "off_duty",
+        "vacation"
+      ],
+      "default": "available"
+    },
+    "rate_per_hour": {
+      "type": "number"
+    },
+    "rate_per_order": {
+      "type": "number"
+    },
+    "rate_per_km": {
+      "type": "number"
+    },
+    "secondary_rate_multiplier": {
+      "type": "number",
+      "description": "Multiplier for secondary/overtime rate, e.g. 1.5"
+    },
+    "license_expiry": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "name",
+    "cedula",
+    "phone"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "DeliveryLocation",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Location name"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "Linked company ID"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Company name for display"
+    },
+    "address": {
+      "type": "string",
+      "description": "Full address"
+    },
+    "lat": {
+      "type": "number",
+      "description": "Latitude"
+    },
+    "lng": {
+      "type": "number",
+      "description": "Longitude"
+    },
+    "allowed_mixes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Allowed concrete mix types"
+    },
+    "special_instructions": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "company_id"
+  ]
+}
