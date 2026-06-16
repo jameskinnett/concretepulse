@@ -11,6 +11,7 @@ import InfoTooltip from '@/components/ui/InfoTooltip';
 
 import StatsCards from '@/components/dashboard/StatsCards';
 import KanbanBoard from '@/components/dashboard/KanbanBoard';
+import DashboardFilterBar from '@/components/dashboard/DashboardFilterBar';
 import TruckDriverSidebar from '@/components/dashboard/TruckDriverSidebar';
 import MapPlaceholder from '@/components/dashboard/MapPlaceholder';
 import NewOrderModal from '@/components/modals/NewOrderModal';
@@ -52,6 +53,19 @@ export default function Dashboard() {
 
   const clearSelection = () => setSelectedIds(new Set());
   const locationStats = computeLocationStats(orders);
+
+  const [filters, setFilters] = useState({ status: 'all', truckId: '', companyId: '' });
+
+  const filteredOrders = orders.filter(order => {
+    if (filters.status !== 'all') {
+      const active = ['new', 'assigned', 'in_progress'];
+      if (filters.status === 'active' && !active.includes(order.status)) return false;
+      if (filters.status !== 'active' && order.status !== filters.status) return false;
+    }
+    if (filters.truckId && order.assigned_truck_id !== filters.truckId) return false;
+    if (filters.companyId && order.company_id !== filters.companyId) return false;
+    return true;
+  });
 
   const markSelectedDelivered = async () => {
     setBulkUpdating(true);
@@ -258,10 +272,18 @@ export default function Dashboard() {
 
       <StatsCards orders={orders} trucks={trucks} />
 
+      <DashboardFilterBar
+        filters={filters}
+        onChange={setFilters}
+        trucks={trucks}
+        companies={companies}
+        orders={orders}
+      />
+
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4">
         <div className="space-y-4">
           <KanbanBoard
-            orders={orders}
+            orders={filteredOrders}
             onOrderClick={setSelectedOrder}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
