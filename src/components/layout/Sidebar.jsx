@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import {
   LayoutDashboard, Package, Truck, Users, Building2,
-  MapPin, X, BarChart2
+  MapPin, X, BarChart2, TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ const navItems = [
   { key: 'companies', icon: Building2, path: '/companies' },
   { key: 'locations', icon: MapPin, path: '/locations' },
   { key: 'reports', icon: BarChart2, path: '/reports', label: 'Reports' },
+  { key: 'driverPerf', icon: TrendingUp, path: '/driver-performance', label: 'Driver Performance' },
 ];
 
 export default function Sidebar({ open, onClose }) {
