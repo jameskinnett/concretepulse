@@ -2,7 +2,9 @@ import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
-import { Menu, Sun, Moon, LogOut, Truck } from 'lucide-react';
+import { Menu, Sun, Moon, LogOut, Truck, ShieldCheck } from 'lucide-react';
+import NotificationBell from '@/components/notifications/NotificationBell';
+import { useRole } from '@/lib/useRole';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +17,7 @@ export default function Header({ onMenuClick }) {
   const { lang, setLang, t } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
+  const { role } = useRole();
 
   return (
     <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-xl border-b border-border">
@@ -55,6 +58,8 @@ export default function Header({ onMenuClick }) {
             <span>{lang === 'en' ? 'ES' : 'EN'}</span>
           </button>
 
+          <NotificationBell />
+
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="w-9 h-9">
             {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </Button>
@@ -70,7 +75,13 @@ export default function Header({ onMenuClick }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <div className="px-2 py-1.5 text-xs text-muted-foreground border-b mb-1">{user.email}</div>
+                <div className="px-2 py-1.5 text-xs text-muted-foreground border-b mb-1">
+                  <div>{user.email}</div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span className="capitalize font-semibold text-foreground">{role}</span>
+                  </div>
+                </div>
                 <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
                   <LogOut className="w-3.5 h-3.5 mr-2" />
                   {t('logout')}

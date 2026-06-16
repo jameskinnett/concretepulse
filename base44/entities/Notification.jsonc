@@ -1,0 +1,46 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "order_new",
+        "order_assigned",
+        "order_in_progress",
+        "order_delivered",
+        "order_cancelled",
+        "driver_comm",
+        "system"
+      ],
+      "default": "system"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "target_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Which roles should see this notification: admin, dispatcher, viewer"
+    }
+  },
+  "required": [
+    "title",
+    "message"
+  ]
+}

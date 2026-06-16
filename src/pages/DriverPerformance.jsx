@@ -5,9 +5,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
 } from 'recharts';
-import { Users, Package, Clock, Trophy, TrendingUp, Calendar } from 'lucide-react';
+import { Users, Package, Clock, Trophy, TrendingUp, Calendar, Download } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { exportDriverPerformance } from '@/lib/pdfExport';
+import { useRole } from '@/lib/useRole';
 import { startOfMonth, endOfMonth, subMonths, isWithinInterval, format } from 'date-fns';
 
 // Build list of last 6 months for the selector
@@ -66,6 +69,7 @@ const PALETTE = [
 export default function DriverPerformance() {
   const MONTHS = useMemo(() => getMonthOptions(), []);
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[0].value);
+  const { canExportReports, canViewFinancials } = useRole();
 
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['orders'],
@@ -143,17 +147,30 @@ export default function DriverPerformance() {
             Completed deliveries and hours worked per driver
           </p>
         </div>
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-44 h-9 text-sm gap-2">
-            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {MONTHS.map(m => (
-              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          {canExportReports && (
+            <Button
+              variant="outline" size="sm" className="gap-1.5 h-9 text-xs"
+              onClick={() => exportDriverPerformance(
+                driverData.map(d => ({ ...d, type: drivers.find(dr => dr.id === d.id)?.type || '—' })),
+                monthRange.label
+              )}
+            >
+              <Download className="w-3.5 h-3.5" /> Export PDF
+            </Button>
+          )}
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-44 h-9 text-sm gap-2">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map(m => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Summary cards */}

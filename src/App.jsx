@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { I18nProvider } from '@/lib/i18n';
 import { ThemeProvider } from '@/lib/ThemeContext';
+import { NotificationProvider } from '@/lib/NotificationContext';
 
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -77,7 +78,9 @@ function App() {
         <I18nProvider>
           <QueryClientProvider client={queryClientInstance}>
             <Router>
-              <AuthenticatedApp />
+              <NotificationProvider>
+                <AuthenticatedApp />
+              </NotificationProvider>
             </Router>
             <Toaster />
           </QueryClientProvider>

@@ -8,6 +8,9 @@ import { Plus, Radio, MessageCircle, Reply, Zap, ZapOff, CheckCircle2, X } from 
 import { computeLocationStats } from '@/hooks/useLocationStats';
 import { toast } from 'sonner';
 import InfoTooltip from '@/components/ui/InfoTooltip';
+import { useRole } from '@/lib/useRole';
+import { useNotifications } from '@/lib/NotificationContext';
+import RoleGuard from '@/components/ui/RoleGuard';
 
 import StatsCards from '@/components/dashboard/StatsCards';
 import KanbanBoard from '@/components/dashboard/KanbanBoard';
@@ -23,6 +26,8 @@ const SAMPLE_MIXES = ['210', '245', '280', '315', '350'];
 export default function Dashboard() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const { canCreateOrders, canAssignOrders } = useRole();
+  const { addNotification } = useNotifications();
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [broadcastOrder, setBroadcastOrder] = useState(null);
@@ -73,6 +78,13 @@ export default function Dashboard() {
     await Promise.all([...selectedIds].map(id =>
       base44.entities.Order.update(id, { status: 'delivered', completion_time: now })
     ));
+    const orderNums = orders.filter(o => selectedIds.has(o.id)).map(o => o.order_number).join(', ');
+    await addNotification({
+      title: `${selectedIds.size} Order${selectedIds.size > 1 ? 's' : ''} Delivered`,
+      message: `Orders marked as delivered: ${orderNums}`,
+      type: 'order_delivered',
+      target_roles: ['admin', 'dispatcher'],
+    });
     toast.success(`✅ ${selectedIds.size} order${selectedIds.size > 1 ? 's' : ''} marked as delivered`);
     clearSelection();
     refresh();
@@ -151,7 +163,7 @@ export default function Dashboard() {
     const orderNum = `ORD-${String(orders.length + 1).padStart(3, '0')}`;
     const scheduledTime = new Date();
     scheduledTime.setMinutes(scheduledTime.getMinutes() + 30 + Math.floor(Math.random() * 120));
-    await base44.entities.Order.create({
+    const newOrd = await base44.entities.Order.create({
       order_number: orderNum,
       company_id: company.id,
       company_name: company.name,
@@ -163,6 +175,14 @@ export default function Dashboard() {
       scheduled_time: scheduledTime.toISOString(),
       status: 'new',
       priority: Math.random() > 0.7 ? 'urgent' : 'normal',
+    });
+    await addNotification({
+      title: `New Order: ${orderNum}`,
+      message: `${company.name} → ${loc.name} · ${mix} kg/cm² · ${qty} m³`,
+      type: 'order_new',
+      order_id: newOrd.id,
+      order_number: orderNum,
+      target_roles: ['admin', 'dispatcher'],
     });
     toast.success(t('simulatedOrder'));
     refresh();
@@ -186,6 +206,14 @@ export default function Dashboard() {
     });
     await base44.entities.Truck.update(truck.id, { status: 'loading', current_driver_id: driver.id, current_driver_name: driver.name });
     await base44.entities.Driver.update(driver.id, { availability: 'on_route' });
+    await addNotification({
+      title: `Order Assigned: ${order.order_number}`,
+      message: `${driver.name} accepted · Truck ${truck.truck_id} · ${order.company_name}`,
+      type: 'order_assigned',
+      order_id: order.id,
+      order_number: order.order_number,
+      target_roles: ['admin', 'dispatcher'],
+    });
     toast.success(`✅ ${driver.name} accepted ${order.order_number} — Truck ${truck.truck_id}`);
     refresh();
   };
@@ -195,17 +223,21 @@ export default function Dashboard() {
       {/* Action bar */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Primary dispatch actions */}
-        <Button onClick={() => setShowNewOrder(true)} className="h-11 px-5 gap-2 text-sm font-semibold shadow-sm">
-          <Plus className="w-4 h-4" /> {t('newOrder')}
-        </Button>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => {
-            const newOrder = orders.find(o => o.status === 'new');
-            if (newOrder) setBroadcastOrder(newOrder);
-            else toast.error('No new orders to broadcast');
-          }} className="h-11 px-5 gap-2 text-sm font-semibold border-2">
-            <Radio className="w-4 h-4" /> {t('broadcastAssignment')}
+        <RoleGuard allow="canCreateOrders">
+          <Button onClick={() => setShowNewOrder(true)} className="h-11 px-5 gap-2 text-sm font-semibold shadow-sm">
+            <Plus className="w-4 h-4" /> {t('newOrder')}
           </Button>
+        </RoleGuard>
+        <div className="flex items-center gap-2">
+          <RoleGuard allow="canAssignOrders">
+            <Button variant="outline" onClick={() => {
+              const newOrder = orders.find(o => o.status === 'new');
+              if (newOrder) setBroadcastOrder(newOrder);
+              else toast.error('No new orders to broadcast');
+            }} className="h-11 px-5 gap-2 text-sm font-semibold border-2">
+              <Radio className="w-4 h-4" /> {t('broadcastAssignment')}
+            </Button>
+          </RoleGuard>
           <InfoTooltip
             text="Sends the order to the WhatsApp driver group. The FIRST driver to reply 'YES' is automatically assigned — no dispatcher intervention needed."
             side="bottom"

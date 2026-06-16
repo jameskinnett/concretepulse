@@ -2,10 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
-import { BarChart2, Clock, TrendingUp, TrendingDown, AlertTriangle, Package, MapPin } from 'lucide-react';
+import { BarChart2, Clock, TrendingUp, TrendingDown, AlertTriangle, Package, MapPin, Download, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
+import { exportDailyDispatch, exportDeliveryHistory } from '@/lib/pdfExport';
+import { useRole } from '@/lib/useRole';
+import { useState as useLocalState } from 'react';
 
 const SORT_OPTIONS = [
   { value: 'avg_desc', label: 'Slowest first' },
@@ -54,6 +58,16 @@ function StatCard({ icon: Icon, label, value, sub, color = 'text-primary' }) {
 
 export default function Reports() {
   const [sortBy, setSortBy] = useState('avg_desc');
+  const { canExportReports } = useRole();
+
+  const { data: companies = [] } = useQuery({
+    queryKey: ['companies'],
+    queryFn: () => base44.entities.Company.list(),
+  });
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: () => base44.entities.DeliveryLocation.list(),
+  });
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
@@ -109,14 +123,26 @@ export default function Reports() {
             Average completion times per delivery location · based on {deliveredOrders.length} completed orders
           </p>
         </div>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-44 h-9 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          {canExportReports && (
+            <>
+              <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs" onClick={() => exportDailyDispatch(orders)}>
+                <Download className="w-3.5 h-3.5" /> Today's Dispatch
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs" onClick={() => exportDeliveryHistory(orders, companies, locations)}>
+                <Download className="w-3.5 h-3.5" /> Delivery History
+              </Button>
+            </>
+          )}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-44 h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Summary stat cards */}
