@@ -14,9 +14,9 @@ const navItems = [
   { key: 'drivers', icon: Users, path: '/drivers' },
   { key: 'companies', icon: Building2, path: '/companies' },
   { key: 'locations', icon: MapPin, path: '/locations' },
-  { key: 'reports', icon: BarChart2, path: '/reports', label: 'Reports' },
-  { key: 'driverPerf', icon: TrendingUp, path: '/driver-performance', label: 'Driver Performance' },
-  { key: 'productDoc', icon: FileText, path: '/product-doc', label: 'Product Brief' },
+  { key: 'reports', icon: BarChart2, path: '/reports' },
+  { key: 'driverPerf', icon: TrendingUp, path: '/driver-performance' },
+  { key: 'productDoc', icon: FileText, path: '/product-doc' },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -65,7 +65,7 @@ export default function Sidebar({ open, onClose }) {
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <item.icon className="w-4.5 h-4.5" />
+                <item.icon className="w-4 h-4 shrink-0" />
                 {item.label || t(item.key)}
               </Link>
             );

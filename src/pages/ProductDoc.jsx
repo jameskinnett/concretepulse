@@ -412,7 +412,7 @@ function ModuleSection({ module, reverse }) {
 export default function ProductDoc() {
   const { lang, setLang } = useI18n();
   const c = CONTENT[lang] || CONTENT.en;
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-body">

@@ -118,6 +118,9 @@ const translations = {
     driverAccepted: "✅ Driver {driver} has accepted Order {order}!\n\nTruck {truck} assigned.\nETA: {eta} minutes.",
     simulatedOrder: "Simulated WhatsApp order created!",
     simulatedReply: "Driver reply simulated!",
+    reports: "Reports",
+    driverPerf: "Driver Performance",
+    productDoc: "Product Brief",
   },
   es: {
     dashboard: "Panel",
@@ -236,6 +239,9 @@ const translations = {
     driverAccepted: "✅ Conductor {driver} aceptó Pedido {order}!\n\nCamión {truck} asignado.\nETA: {eta} minutos.",
     simulatedOrder: "¡Pedido simulado por WhatsApp creado!",
     simulatedReply: "¡Respuesta del conductor simulada!",
+    reports: "Reportes",
+    driverPerf: "Desempeño Conductores",
+    productDoc: "Documento del Producto",
   }
 };
 
