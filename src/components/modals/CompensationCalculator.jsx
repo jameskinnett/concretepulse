@@ -7,6 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { Calculator, Clock, Package, MapPin, AlertCircle, CheckCircle2, Edit3 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import InfoTooltip from '@/components/ui/InfoTooltip';
+import { useI18n } from '@/lib/i18n';
 
 function RateRow({ icon: RowIcon, label, rate, hours, km, method, color }) {
   const Icon = RowIcon;
@@ -30,6 +32,7 @@ function RateRow({ icon: RowIcon, label, rate, hours, km, method, color }) {
 }
 
 export default function CompensationCalculator({ order, driver, distanceKm, onMarkDelivered, saving }) {
+  const { lang } = useI18n();
   const [timeHours, setTimeHours] = useState('2.0');
   const [overrideAmount, setOverrideAmount] = useState('');
   const [overrideNote, setOverrideNote] = useState('');
@@ -80,8 +83,14 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Calculator className="w-4 h-4 text-primary" />
-        <h4 className="text-sm font-semibold">Compensation Calculator</h4>
-        {driver && <Badge variant="outline" className="text-[10px]">{driver.type === 'contractor' ? 'Contractor' : 'Employee'}</Badge>}
+        <h4 className="text-sm font-semibold">
+          {lang === 'es' ? 'Calculadora de Compensación' : 'Compensation Calculator'}
+        </h4>
+        {driver && <Badge variant="outline" className="text-[10px]">{driver.type === 'contractor' ? (lang === 'es' ? 'Contratista' : 'Contractor') : (lang === 'es' ? 'Empleado' : 'Employee')}</Badge>}
+        <InfoTooltip
+          text="Rates are pulled from the driver's profile. Primary rate applies first; overtime bonus kicks in after 3 hours. Distance rate charges per km driven."
+          side="top"
+        />
       </div>
 
       {driver ? (
@@ -90,7 +99,7 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                <Clock className="w-3 h-3" /> Time (hours)
+                <Clock className="w-3 h-3" /> {lang === 'es' ? 'Tiempo (horas)' : 'Time (hours)'}
               </Label>
               <Input
                 type="number"
@@ -103,7 +112,7 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
             </div>
             <div>
               <Label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                <MapPin className="w-3 h-3" /> Distance (km)
+                <MapPin className="w-3 h-3" /> {lang === 'es' ? 'Distancia (km)' : 'Distance (km)'}
               </Label>
               <Input
                 type="number"
@@ -161,17 +170,24 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <Edit3 className="w-3 h-3" />
-            {showOverride ? 'Hide override' : 'Override amount manually'}
+            {showOverride
+              ? (lang === 'es' ? 'Ocultar ajuste' : 'Hide override')
+              : (lang === 'es' ? 'Ajustar monto manualmente' : 'Override amount manually')}
           </button>
 
           {showOverride && (
             <div className="space-y-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <div className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-300 font-medium">
-                <AlertCircle className="w-3.5 h-3.5" /> Manual Override
+              <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 font-medium">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {lang === 'es' ? 'Ajuste Manual' : 'Manual Override'}
+                <InfoTooltip
+                  text="Use this to adjust the final pay for special situations: difficult access, extra wait time, or agreed bonuses. The override is saved with a note in the compensation record."
+                  side="top"
+                />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs mb-1 block">Override Amount ($)</Label>
+                  <Label className="text-xs mb-1 block">{lang === 'es' ? 'Monto Ajustado ($)' : 'Override Amount ($)'}</Label>
                   <Input
                     type="number"
                     placeholder={`Default: $${calculatedTotal.toFixed(2)}`}
@@ -181,9 +197,9 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
                   />
                 </div>
                 <div>
-                  <Label className="text-xs mb-1 block">Reason / Note</Label>
+                  <Label className="text-xs mb-1 block">{lang === 'es' ? 'Razón / Nota' : 'Reason / Note'}</Label>
                   <Input
-                    placeholder="e.g. Difficult access..."
+                    placeholder={lang === 'es' ? 'Ej. Acceso difícil...' : 'e.g. Difficult access...'}
                     value={overrideNote}
                     onChange={e => setOverrideNote(e.target.value)}
                     className="h-9"
@@ -191,8 +207,10 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
                 </div>
               </div>
               {isOverridden && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-amber-700 dark:text-amber-300">Final (overridden)</span>
+                <div className="flex items-center justify-between text-xs bg-amber-100 dark:bg-amber-900/40 rounded px-2 py-1">
+                  <span className="text-amber-700 dark:text-amber-300 font-medium">
+                    {lang === 'es' ? 'Monto Final (ajustado)' : 'Final (overridden)'}
+                  </span>
                   <span className="font-bold text-amber-700 dark:text-amber-300">${finalAmount.toFixed(2)}</span>
                 </div>
               )}
@@ -205,7 +223,7 @@ export default function CompensationCalculator({ order, driver, distanceKm, onMa
             className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold gap-2"
           >
             <CheckCircle2 className="w-4 h-4" />
-            Mark Delivered — Pay ${finalAmount.toFixed(2)}
+            {lang === 'es' ? `Marcar Entregado — Pagar $${finalAmount.toFixed(2)}` : `Mark Delivered — Pay $${finalAmount.toFixed(2)}`}
           </Button>
         </>
       ) : (

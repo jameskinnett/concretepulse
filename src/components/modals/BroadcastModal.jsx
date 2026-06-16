@@ -3,7 +3,8 @@ import { useI18n } from '@/lib/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, CheckCheck, Clock, Trophy, Zap } from 'lucide-react';
+import { MessageCircle, Send, CheckCheck, Clock, Trophy, Zap, HelpCircle } from 'lucide-react';
+import InfoTooltip from '@/components/ui/InfoTooltip';
 import { toast } from 'sonner';
 
 const DRIVER_NAMES = [
@@ -117,6 +118,10 @@ export default function BroadcastModal({ open, onClose, order }) {
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-emerald-500" />
             {t('broadcastAssignment')} — {order.order_number}
+            <InfoTooltip
+              text="This simulates sending the order to a WhatsApp driver group. The first driver to reply wins the order — no manual assignment needed."
+              side="bottom"
+            />
           </DialogTitle>
         </DialogHeader>
 

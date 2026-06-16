@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Radio, MessageCircle, Reply, Zap, ZapOff } from 'lucide-react';
 import { toast } from 'sonner';
+import InfoTooltip from '@/components/ui/InfoTooltip';
 
 import StatsCards from '@/components/dashboard/StatsCards';
 import KanbanBoard from '@/components/dashboard/KanbanBoard';
@@ -157,33 +158,49 @@ export default function Dashboard() {
         <Button onClick={() => setShowNewOrder(true)} className="h-11 px-5 gap-2 text-sm font-semibold shadow-sm">
           <Plus className="w-4 h-4" /> {t('newOrder')}
         </Button>
-        <Button variant="outline" onClick={() => {
-          const newOrder = orders.find(o => o.status === 'new');
-          if (newOrder) setBroadcastOrder(newOrder);
-          else toast.error('No new orders to broadcast');
-        }} className="h-11 px-5 gap-2 text-sm font-semibold border-2">
-          <Radio className="w-4 h-4" /> {t('broadcastAssignment')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => {
+            const newOrder = orders.find(o => o.status === 'new');
+            if (newOrder) setBroadcastOrder(newOrder);
+            else toast.error('No new orders to broadcast');
+          }} className="h-11 px-5 gap-2 text-sm font-semibold border-2">
+            <Radio className="w-4 h-4" /> {t('broadcastAssignment')}
+          </Button>
+          <InfoTooltip
+            text="Sends the order to the WhatsApp driver group. The FIRST driver to reply 'YES' is automatically assigned — no dispatcher intervention needed."
+            side="bottom"
+          />
+        </div>
 
         <div className="flex-1" />
 
-        {/* Demo mode toggle */}
-        <Button
-          variant={demoMode ? 'default' : 'outline'}
-          onClick={() => { setDemoMode(v => !v); toast(demoMode ? 'Demo mode off' : '⚡ Demo mode on — orders will auto-update every 6s'); }}
-          className={`h-11 gap-2 text-xs font-semibold ${demoMode ? 'bg-violet-600 hover:bg-violet-700 text-white animate-pulse' : ''}`}
-        >
-          {demoMode ? <ZapOff className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
-          {demoMode ? 'Stop Demo' : 'Demo Mode'}
-        </Button>
-
-        {/* Simulation buttons */}
-        <Button variant="secondary" onClick={simulateWhatsAppOrder} className="h-11 gap-2 text-xs">
-          <MessageCircle className="w-3.5 h-3.5" /> {t('simulateWhatsApp')}
-        </Button>
-        <Button variant="secondary" onClick={simulateDriverReply} className="h-11 gap-2 text-xs">
-          <Reply className="w-3.5 h-3.5" /> {t('simulateDriverReply')}
-        </Button>
+        {/* Demo mode — prominent section */}
+        <div className="flex items-center gap-2 bg-muted/60 rounded-xl px-3 py-1.5 border border-border">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:block">Demo</span>
+            <InfoTooltip text="Demo Mode auto-progresses orders every 6 seconds to simulate live dispatch activity. Great for presentations." side="bottom" />
+          </div>
+          <Button
+            variant={demoMode ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => { setDemoMode(v => !v); toast(demoMode ? 'Demo mode off' : '⚡ Demo mode on — orders will auto-update every 6s'); }}
+            className={`h-8 gap-1.5 text-xs font-semibold ${demoMode ? 'bg-violet-600 hover:bg-violet-700 text-white' : ''}`}
+          >
+            {demoMode ? <ZapOff className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+            {demoMode ? 'Stop' : 'Start'}
+          </Button>
+          <div className="w-px h-5 bg-border" />
+          <Button variant="ghost" size="sm" onClick={simulateWhatsAppOrder} className="h-8 gap-1.5 text-xs">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t('simulateWhatsApp')}</span>
+            <span className="sm:hidden">WA</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={simulateDriverReply} className="h-8 gap-1.5 text-xs">
+            <Reply className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t('simulateDriverReply')}</span>
+            <span className="sm:hidden">Reply</span>
+          </Button>
+        </div>
       </div>
 
       {demoMode && (
