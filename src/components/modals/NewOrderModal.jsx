@@ -8,11 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, Clock, TrendingUp } from 'lucide-react';
+import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
 
 const MIX_TYPES = ['210', '245', '280', '315', '350', '380', '420'];
 
-export default function NewOrderModal({ open, onClose, companies, locations, onRefresh, existingOrders }) {
+export default function NewOrderModal({ open, onClose, companies, locations, onRefresh, existingOrders, orders = [] }) {
   const { t } = useI18n();
   const [companyId, setCompanyId] = useState('');
   const [locationId, setLocationId] = useState('');
@@ -26,6 +27,8 @@ export default function NewOrderModal({ open, onClose, companies, locations, onR
   const filteredLocations = locations.filter(l => l.company_id === companyId);
   const selectedCompany = companies.find(c => c.id === companyId);
   const selectedLocation = locations.find(l => l.id === locationId);
+  const locationStats = computeLocationStats(orders);
+  const locStat = locationId ? locationStats.get(locationId) : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,9 +82,26 @@ export default function NewOrderModal({ open, onClose, companies, locations, onR
             <Select value={locationId} onValueChange={setLocationId} disabled={!companyId}>
               <SelectTrigger><SelectValue placeholder={t('selectLocation')} /></SelectTrigger>
               <SelectContent>
-                {filteredLocations.map(l => <SelectItem key={l.id} value={l.id}>{l.name} — {l.address}</SelectItem>)}
+                {filteredLocations.map(l => {
+                  const s = locationStats.get(l.id);
+                  return (
+                    <SelectItem key={l.id} value={l.id}>
+                      <span>{l.name}</span>
+                      {s && <span className="ml-2 text-muted-foreground text-xs">~{formatDuration(s.avgMinutes)}</span>}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
+            {locStat && (
+              <div className="mt-1.5 flex items-center gap-2 text-xs bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1.5 text-blue-700 dark:text-blue-400">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  Avg delivery: <strong>{formatDuration(locStat.avgMinutes)}</strong>
+                  <span className="text-blue-500 ml-1">({formatDuration(locStat.minMinutes)}–{formatDuration(locStat.maxMinutes)} range, {locStat.count} past orders)</span>
+                </span>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

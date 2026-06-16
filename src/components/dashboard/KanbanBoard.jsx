@@ -1,10 +1,11 @@
 import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
-import { Clock, Truck, ArrowRight, CheckCircle2, AlertTriangle, Zap } from 'lucide-react';
+import { Clock, Truck, ArrowRight, CheckCircle2, AlertTriangle, Zap, Timer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
+import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
 
 const columnConfig = {
   new: { color: 'border-t-primary', headerBg: 'bg-primary/5', icon: Clock, dotColor: 'bg-primary' },
@@ -20,8 +21,20 @@ const statusCardBorder = {
   delivered: 'hover:border-emerald-400/40',
 };
 
-function OrderCard({ order, onClick, selected, onToggleSelect }) {
+function OrderCard({ order, onClick, selected, onToggleSelect, locStat }) {
   const isInProgress = order.status === 'in_progress';
+
+  // Compute expected completion time for in-progress orders
+  const etaLabel = (() => {
+    if (!isInProgress || !order.departure_time || !locStat) return null;
+    const departed = new Date(order.departure_time);
+    const expected = new Date(departed.getTime() + locStat.avgMinutes * 60000);
+    const now = new Date();
+    const remainingMins = Math.round((expected - now) / 60000);
+    if (remainingMins < -60) return null; // way overdue, skip
+    if (remainingMins < 0) return { label: `${Math.abs(remainingMins)}min overdue`, overdue: true };
+    return { label: `~${formatDuration(remainingMins)} remaining`, overdue: false };
+  })();
   const isSelectable = order.status !== 'delivered' && order.status !== 'cancelled';
 
   return (
@@ -80,12 +93,23 @@ function OrderCard({ order, onClick, selected, onToggleSelect }) {
             {format(new Date(order.scheduled_time), 'HH:mm')}
           </div>
         )}
+        {etaLabel && (
+          <div className={cn(
+            "text-[10px] mt-1.5 flex items-center gap-1 font-semibold rounded px-1.5 py-0.5",
+            etaLabel.overdue
+              ? 'bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400'
+              : 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400'
+          )}>
+            <Timer className="w-3 h-3" />
+            {etaLabel.label}
+          </div>
+        )}
       </button>
     </div>
   );
 }
 
-export default function KanbanBoard({ orders, onOrderClick, selectedIds, onToggleSelect }) {
+export default function KanbanBoard({ orders, onOrderClick, selectedIds, onToggleSelect, locationStats }) {
   const { t } = useI18n();
   const columns = ['new', 'assigned', 'in_progress', 'delivered'];
   const columnLabels = { new: t('new'), assigned: t('assigned'), in_progress: t('inProgress'), delivered: t('delivered') };
@@ -121,6 +145,7 @@ export default function KanbanBoard({ orders, onOrderClick, selectedIds, onToggl
                   onClick={onOrderClick}
                   selected={selectedIds.has(order.id)}
                   onToggleSelect={onToggleSelect}
+                  locStat={locationStats?.get(order.delivery_location_id)}
                 />
               ))}
             </div>

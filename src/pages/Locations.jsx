@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, MapPin, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, MapPin, Pencil, Trash2, Search, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
 
 const defaultForm = { name: '', company_id: '', address: '', lat: '', lng: '', special_instructions: '' };
 
@@ -24,7 +25,10 @@ export default function Locations() {
 
   const { data: locations = [] } = useQuery({ queryKey: ['locations'], queryFn: () => base44.entities.DeliveryLocation.list() });
   const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: () => base44.entities.Company.list() });
+  const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => base44.entities.Order.list('-completion_time', 500) });
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['locations'] });
+
+  const locationStats = computeLocationStats(orders);
 
   const openEdit = (l) => {
     setEditing(l);
@@ -80,6 +84,7 @@ export default function Locations() {
               <TableHead>{t('company')}</TableHead>
               <TableHead className="hidden md:table-cell">{t('address')}</TableHead>
               <TableHead className="hidden lg:table-cell">{t('coordinates')}</TableHead>
+              <TableHead className="hidden md:table-cell"><Clock className="w-3.5 h-3.5 inline mr-1" />Avg Delivery</TableHead>
               <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -91,6 +96,18 @@ export default function Locations() {
                 <TableCell className="hidden md:table-cell text-muted-foreground max-w-48 truncate">{l.address}</TableCell>
                 <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
                   {l.lat && l.lng ? `${l.lat}, ${l.lng}` : '—'}
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-xs">
+                  {(() => {
+                    const s = locationStats.get(l.id);
+                    if (!s) return <span className="text-muted-foreground">No data</span>;
+                    return (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-foreground">{formatDuration(s.avgMinutes)}</span>
+                        <span className="text-muted-foreground">{s.count} deliveries · {formatDuration(s.minMinutes)}–{formatDuration(s.maxMinutes)}</span>
+                      </div>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">

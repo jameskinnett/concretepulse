@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Radio, MessageCircle, Reply, Zap, ZapOff, CheckCircle2, X } from 'lucide-react';
+import { computeLocationStats } from '@/hooks/useLocationStats';
 import { toast } from 'sonner';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 
@@ -50,6 +51,7 @@ export default function Dashboard() {
   };
 
   const clearSelection = () => setSelectedIds(new Set());
+  const locationStats = computeLocationStats(orders);
 
   const markSelectedDelivered = async () => {
     setBulkUpdating(true);
@@ -263,6 +265,7 @@ export default function Dashboard() {
             onOrderClick={setSelectedOrder}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
+            locationStats={locationStats}
           />
           <MapPlaceholder trucks={trucks} />
         </div>
@@ -275,6 +278,7 @@ export default function Dashboard() {
         companies={companies}
         locations={locations}
         existingOrders={orders}
+        orders={orders}
         onRefresh={refresh}
       />
       <OrderDetailModal
