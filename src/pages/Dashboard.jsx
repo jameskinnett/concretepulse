@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radio, MessageCircle, Reply, Zap, ZapOff } from 'lucide-react';
+import { Plus, Radio, MessageCircle, Reply, Zap, ZapOff, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 
@@ -25,6 +25,8 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [broadcastOrder, setBroadcastOrder] = useState(null);
   const [demoMode, setDemoMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const demoRef = useRef(null);
 
   const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => base44.entities.Order.list('-created_date', 100) });
@@ -37,6 +39,28 @@ export default function Dashboard() {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
     queryClient.invalidateQueries({ queryKey: ['trucks'] });
     queryClient.invalidateQueries({ queryKey: ['drivers'] });
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const markSelectedDelivered = async () => {
+    setBulkUpdating(true);
+    const now = new Date().toISOString();
+    await Promise.all([...selectedIds].map(id =>
+      base44.entities.Order.update(id, { status: 'delivered', completion_time: now })
+    ));
+    toast.success(`✅ ${selectedIds.size} order${selectedIds.size > 1 ? 's' : ''} marked as delivered`);
+    clearSelection();
+    refresh();
+    setBulkUpdating(false);
   };
 
   // ─── Demo Mode: fake real-time order progression ───────────────────────────
@@ -210,11 +234,36 @@ export default function Dashboard() {
         </div>
       )}
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700 rounded-xl px-4 py-2.5 animate-in slide-in-from-top-2 duration-200">
+          <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+            {selectedIds.size} order{selectedIds.size > 1 ? 's' : ''} selected
+          </span>
+          <Button
+            size="sm"
+            onClick={markSelectedDelivered}
+            disabled={bulkUpdating}
+            className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {bulkUpdating ? 'Updating…' : 'Mark Delivered'}
+          </Button>
+          <button onClick={clearSelection} className="ml-auto text-emerald-600 hover:text-emerald-800 dark:text-emerald-400">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <StatsCards orders={orders} trucks={trucks} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_260px] gap-4">
         <div className="space-y-4">
-          <KanbanBoard orders={orders} onOrderClick={setSelectedOrder} />
+          <KanbanBoard
+            orders={orders}
+            onOrderClick={setSelectedOrder}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+          />
           <MapPlaceholder trucks={trucks} />
         </div>
         <TruckDriverSidebar trucks={trucks} drivers={drivers} />
