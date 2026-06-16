@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -412,46 +412,72 @@ function ModuleSection({ module, reverse }) {
 export default function ProductDoc() {
   const { lang, setLang } = useI18n();
   const c = CONTENT[lang] || CONTENT.en;
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-body">
 
       {/* ── Sticky Nav ── */}
-      <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 mr-2">
+      <nav className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        {/* Main bar — single row, never wraps */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+          {/* Brand */}
+          <div className="flex items-center gap-2 shrink-0">
             <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center">
               <Truck className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">ConcretePulse</span>
-            <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-[10px] font-bold ml-1 hidden sm:inline-flex">{c.navBadge}</Badge>
+            <span className="font-bold text-gray-900 text-sm">ConcretePulse</span>
+            <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-[10px] font-bold hidden md:inline-flex">{c.navBadge}</Badge>
           </div>
-          <div className="hidden lg:flex items-center gap-1 flex-1 flex-wrap">
+
+          {/* Module links — only on XL, inline, single line */}
+          <div className="hidden xl:flex items-center gap-0.5 flex-1 overflow-hidden ml-4">
             {c.modules.map(m => (
-              <a key={m.id} href={`#${m.id}`} className="text-xs text-gray-500 hover:text-orange-600 px-2 py-1 rounded-md hover:bg-orange-50 transition-colors font-medium">
+              <a key={m.id} href={`#${m.id}`} className="text-[11px] text-gray-500 hover:text-orange-600 px-1.5 py-1 rounded hover:bg-orange-50 transition-colors font-medium whitespace-nowrap">
                 {m.title}
               </a>
             ))}
           </div>
-          <div className="flex items-center gap-2 ml-auto">
-            {/* Language toggle */}
-            <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-xs font-semibold">
-              <button
-                onClick={() => setLang('en')}
-                className={cn('px-3 py-1.5 transition-colors', lang === 'en' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50')}
-              >EN</button>
-              <button
-                onClick={() => setLang('es')}
-                className={cn('px-3 py-1.5 transition-colors', lang === 'es' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50')}
-              >ES</button>
+
+          {/* Spacer */}
+          <div className="flex-1 xl:hidden" />
+
+          {/* Right controls */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Lang toggle */}
+            <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-xs font-bold">
+              <button onClick={() => setLang('en')} className={cn('px-2.5 py-1.5 transition-colors', lang === 'en' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50')}>EN</button>
+              <button onClick={() => setLang('es')} className={cn('px-2.5 py-1.5 transition-colors', lang === 'es' ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-gray-50')}>ES</button>
             </div>
             <Link to="/">
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white gap-1.5 text-xs h-8">
-                <ArrowRight className="w-3.5 h-3.5" /> {c.openApp}
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white gap-1.5 text-xs h-8 px-3">
+                <ArrowRight className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{c.openApp}</span>
               </Button>
             </Link>
+            {/* Hamburger for module links on non-XL */}
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              className="xl:hidden flex flex-col gap-1 p-2 rounded-md hover:bg-gray-100 transition-colors"
+              aria-label="Menu"
+            >
+              <span className={cn('block w-4 h-0.5 bg-gray-600 transition-transform', menuOpen && 'translate-y-1.5 rotate-45')} />
+              <span className={cn('block w-4 h-0.5 bg-gray-600 transition-opacity', menuOpen && 'opacity-0')} />
+              <span className={cn('block w-4 h-0.5 bg-gray-600 transition-transform', menuOpen && '-translate-y-1.5 -rotate-45')} />
+            </button>
           </div>
         </div>
+
+        {/* Mobile module menu */}
+        {menuOpen && (
+          <div className="xl:hidden border-t border-gray-100 bg-white px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-1">
+            {c.modules.map(m => (
+              <a key={m.id} href={`#${m.id}`} onClick={() => setMenuOpen(false)}
+                className="text-xs text-gray-600 hover:text-orange-600 px-3 py-2 rounded-lg hover:bg-orange-50 transition-colors font-medium">
+                {m.title}
+              </a>
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* ── Hero ── */}
