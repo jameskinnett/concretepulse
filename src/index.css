@@ -89,3 +89,19 @@
     @apply bg-background text-foreground font-body;
   }
 }
+
+/* Mobile dispatch optimizations */
+@media (max-width: 640px) {
+  .kanban-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.75rem;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.5rem;
+  }
+  .kanban-scroll > * {
+    flex: 0 0 80vw;
+    scroll-snap-align: start;
+  }
+}
