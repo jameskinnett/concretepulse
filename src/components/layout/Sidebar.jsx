@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import {
   LayoutDashboard, Package, Truck, Users, Building2,
-  MapPin, X
+  MapPin, X, BarChart2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +14,7 @@ const navItems = [
   { key: 'drivers', icon: Users, path: '/drivers' },
   { key: 'companies', icon: Building2, path: '/companies' },
   { key: 'locations', icon: MapPin, path: '/locations' },
+  { key: 'reports', icon: BarChart2, path: '/reports', label: 'Reports' },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -63,7 +64,7 @@ export default function Sidebar({ open, onClose }) {
                 )}
               >
                 <item.icon className="w-4.5 h-4.5" />
-                {t(item.key)}
+                {item.label || t(item.key)}
               </Link>
             );
           })}

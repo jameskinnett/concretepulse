@@ -21,6 +21,7 @@ import Trucks from '@/pages/Trucks';
 import Drivers from '@/pages/Drivers';
 import Companies from '@/pages/Companies';
 import Locations from '@/pages/Locations';
+import Reports from '@/pages/Reports';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
           <Route path="/drivers" element={<Drivers />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/locations" element={<Locations />} />
+          <Route path="/reports" element={<Reports />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
