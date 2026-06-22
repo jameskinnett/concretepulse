@@ -5,6 +5,7 @@ import { Clock, TrendingUp, TrendingDown, AlertTriangle, MapPin } from 'lucide-r
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
+import StatCard from './StatCard';
 
 const SORT_OPTIONS = [
   { value: 'avg_desc', label: 'Slowest first' },
@@ -22,15 +23,6 @@ function CustomTooltip({ active, payload }) {
       <div className="flex justify-between gap-4"><span className="text-muted-foreground">Avg time</span><span className="font-semibold text-foreground">{formatDuration(d.avgMinutes)}</span></div>
       <div className="flex justify-between gap-4"><span className="text-muted-foreground">Range</span><span className="text-foreground">{formatDuration(d.minMinutes)} – {formatDuration(d.maxMinutes)}</span></div>
       <div className="flex justify-between gap-4"><span className="text-muted-foreground">Deliveries</span><span className="text-foreground">{d.count}</span></div>
-    </div>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, sub, color = 'text-primary' }) {
-  return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
-      <div className={`p-2 rounded-lg bg-muted ${color}`}><Icon className="w-4 h-4" /></div>
-      <div><p className="text-xs text-muted-foreground">{label}</p><p className="text-lg font-bold text-foreground">{value}</p>{sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}</div>
     </div>
   );
 }

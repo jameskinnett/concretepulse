@@ -1,22 +1,8 @@
 import React, { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Package, CheckCircle2, XCircle, Truck, Clock, TrendingUp } from 'lucide-react';
-import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
-
-function StatCard({ icon: Icon, label, value, sub, color = 'text-primary' }) {
-  return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
-      <div className={`p-2 rounded-lg bg-muted ${color}`}>
-        <Icon className="w-4 h-4" />
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-lg font-bold text-foreground">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
+import { formatDuration } from '@/hooks/useLocationStats';
+import StatCard from './StatCard';
 
 export default function OverviewTab({ orders, trucks }) {
   const { t } = useI18n();

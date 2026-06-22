@@ -3,7 +3,7 @@ import { useI18n } from '@/lib/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageCircle, Send, CheckCheck, Clock, Trophy, Zap, Users, AlertCircle, Radio } from 'lucide-react';
+import { MessageCircle, Send, CheckCheck, Trophy, Zap, Users, AlertCircle, Radio } from 'lucide-react';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -41,7 +41,6 @@ export default function BroadcastModal({ open, onClose, order, drivers = [], tru
   const [phase, setPhase] = useState('select'); // select | broadcasting | racing | won | timeout | escalated | noresponse
   const [messages, setMessages] = useState([]);
   const [winner, setWinner] = useState(null);
-  const [countdown, setCountdown] = useState(15);
   const timersRef = useRef([]);
 
   useEffect(() => {
@@ -50,7 +49,6 @@ export default function BroadcastModal({ open, onClose, order, drivers = [], tru
       setMessages([]);
       setWinner(null);
       setSelectedGroupId('');
-      setCountdown(15);
       timersRef.current.forEach(id => clearTimeout(id));
       timersRef.current = [];
     }
@@ -141,7 +139,6 @@ export default function BroadcastModal({ open, onClose, order, drivers = [], tru
 
   const handleBroadcast = () => {
     const groupDrivers = getGroupDrivers();
-    setCountdown(15);
     startBroadcast(groupDrivers, false);
   };
 

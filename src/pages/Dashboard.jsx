@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radio, MessageCircle, Reply, Zap, ZapOff, CheckCircle2, X } from 'lucide-react';
+import { Plus, MessageCircle, Reply, Zap, ZapOff, CheckCircle2, X } from 'lucide-react';
 import { computeLocationStats } from '@/hooks/useLocationStats';
 import { toast } from 'sonner';
 import InfoTooltip from '@/components/ui/InfoTooltip';
@@ -26,7 +26,7 @@ const SAMPLE_MIXES = ['210', '245', '280', '315', '350'];
 export default function Dashboard() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const { canCreateOrders, canAssignOrders } = useRole();
+  const { canCreateOrders } = useRole();
   const { addNotification } = useNotifications();
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);

@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Truck, Package, CheckCircle2, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import StatCard from './StatCard';
 
 const PALETTE = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
@@ -14,15 +15,6 @@ const statusColors = {
   maintenance: 'bg-red-500/10 text-red-600',
   off_duty: 'bg-muted text-muted-foreground',
 };
-
-function StatCard({ icon: Icon, label, value, sub, color = 'text-primary' }) {
-  return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
-      <div className={`p-2 rounded-lg bg-muted ${color}`}><Icon className="w-4 h-4" /></div>
-      <div><p className="text-xs text-muted-foreground">{label}</p><p className="text-lg font-bold text-foreground">{value}</p>{sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}</div>
-    </div>
-  );
-}
 
 export default function TrucksTab({ orders, trucks }) {
   const { t } = useI18n();
@@ -65,7 +57,7 @@ export default function TrucksTab({ orders, trucks }) {
       ) : (
         <>
           <div className="bg-card border border-border rounded-xl p-5">
-            <h2 className="font-semibold text-sm mb-4">{t('deliveriesCompleted')} {t('perTruck')}</h2>
+            <h2 className="font-semibold text-sm mb-4">{t('deliveriesCompleted')} — {t('perTruck')}</h2>
             <ResponsiveContainer width="100%" height={Math.max(220, data.length * 48)}>
               <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />

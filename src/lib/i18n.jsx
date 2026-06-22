@@ -184,6 +184,7 @@ const translations = {
     avgDeliveryTime: "Avg Delivery Time",
     completedOrders: "Completed Orders",
     noGroupsYet: "No driver groups yet. Create one to use broadcast assignment.",
+    perTruck: "per Truck",
   },
   es: {
     dashboard: "Panel",
@@ -368,6 +369,7 @@ const translations = {
     avgDeliveryTime: "Tiempo Prom. de Entrega",
     completedOrders: "Pedidos Completados",
     noGroupsYet: "Sin grupos de conductores. Cree uno para usar asignación por difusión.",
+    perTruck: "por Camión",
   }
 };
 
