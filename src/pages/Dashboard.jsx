@@ -41,6 +41,7 @@ export default function Dashboard() {
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.list() });
   const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: () => base44.entities.Company.list() });
   const { data: locations = [] } = useQuery({ queryKey: ['locations'], queryFn: () => base44.entities.DeliveryLocation.list() });
+  const { data: driverGroups = [] } = useQuery({ queryKey: ['driverGroups'], queryFn: () => base44.entities.DriverGroup.list() });
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -228,21 +229,6 @@ export default function Dashboard() {
             <Plus className="w-4 h-4" /> {t('newOrder')}
           </Button>
         </RoleGuard>
-        <div className="flex items-center gap-2">
-          <RoleGuard allow="canAssignOrders">
-            <Button variant="outline" onClick={() => {
-              const newOrder = orders.find(o => o.status === 'new');
-              if (newOrder) setBroadcastOrder(newOrder);
-              else toast.error('No new orders to broadcast');
-            }} className="h-11 px-5 gap-2 text-sm font-semibold border-2">
-              <Radio className="w-4 h-4" /> {t('broadcastAssignment')}
-            </Button>
-          </RoleGuard>
-          <InfoTooltip
-            text="Sends the order to the WhatsApp driver group. The FIRST driver to reply 'YES' is automatically assigned — no dispatcher intervention needed."
-            side="bottom"
-          />
-        </div>
 
         <div className="flex-1" />
 
@@ -333,6 +319,10 @@ export default function Dashboard() {
         locations={locations}
         existingOrders={orders}
         orders={orders}
+        trucks={trucks}
+        drivers={drivers}
+        driverGroups={driverGroups}
+        onBroadcastOrder={(order) => setBroadcastOrder(order)}
         onRefresh={refresh}
       />
       <OrderDetailModal
@@ -341,12 +331,18 @@ export default function Dashboard() {
         order={selectedOrder}
         trucks={trucks}
         drivers={drivers}
+        driverGroups={driverGroups}
+        onBroadcastOrder={(order) => setBroadcastOrder(order)}
         onRefresh={refresh}
       />
       <BroadcastModal
         open={!!broadcastOrder}
         onClose={() => setBroadcastOrder(null)}
         order={broadcastOrder}
+        drivers={drivers}
+        trucks={trucks}
+        driverGroups={driverGroups}
+        onAssigned={refresh}
       />
     </div>
   );

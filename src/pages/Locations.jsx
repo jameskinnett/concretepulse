@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, MapPin, Pencil, Trash2, Search, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
+import MapPicker from '@/components/locations/MapPicker';
 
 const defaultForm = { name: '', company_id: '', address: '', lat: '', lng: '', special_instructions: '' };
 
@@ -138,9 +139,15 @@ export default function Locations() {
               </Select>
             </div>
             <div><Label className="text-xs">{t('address')}</Label><Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label className="text-xs">Lat</Label><Input type="number" step="any" value={form.lat} onChange={e => setForm({...form, lat: e.target.value})} /></div>
-              <div><Label className="text-xs">Lng</Label><Input type="number" step="any" value={form.lng} onChange={e => setForm({...form, lng: e.target.value})} /></div>
+            <div>
+              <Label className="text-xs">{t('coordinates')}</Label>
+              <div className="mt-1.5">
+                <MapPicker
+                  lat={form.lat ? parseFloat(form.lat) : null}
+                  lng={form.lng ? parseFloat(form.lng) : null}
+                  onChange={({ lat, lng }) => setForm({...form, lat: String(lat), lng: String(lng)})}
+                />
+              </div>
             </div>
             <div><Label className="text-xs">{t('specialInstructions')}</Label><Textarea value={form.special_instructions} onChange={e => setForm({...form, special_instructions: e.target.value})} rows={2} /></div>
             <Button onClick={handleSave} className="w-full">{t('save')}</Button>

@@ -90,6 +90,18 @@
         "urgent"
       ],
       "default": "normal"
+    },
+    "cancel_reason": {
+      "type": "string",
+      "description": "Reason for cancellation"
+    },
+    "cancelled_by": {
+      "type": "string",
+      "description": "Name of user who cancelled"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

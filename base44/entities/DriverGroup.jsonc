@@ -1,51 +1,27 @@
 {
-  "name": "Company",
+  "name": "DriverGroup",
   "type": "object",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Company name"
+      "description": "Group name e.g. Night Shift, North Zone"
     },
-    "contact_name": {
-      "type": "string",
-      "description": "Primary contact name"
-    },
-    "contact_phone": {
-      "type": "string",
-      "description": "Primary phone"
-    },
-    "contact_email": {
-      "type": "string",
-      "description": "Email"
-    },
-    "billing_contact_name": {
-      "type": "string",
-      "description": "Billing contact name"
-    },
-    "billing_contact_phone": {
-      "type": "string",
-      "description": "Billing contact phone"
-    },
-    "billing_contact_email": {
-      "type": "string",
-      "description": "Billing contact email"
-    },
-    "credit_status": {
-      "type": "string",
-      "enum": [
-        "approved",
-        "pending",
-        "suspended",
-        "cod"
-      ],
-      "default": "pending"
-    },
-    "credit_limit": {
-      "type": "number",
-      "description": "Credit limit in USD"
-    },
-    "notes": {
+    "description": {
       "type": "string"
+    },
+    "driver_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of driver IDs in this group"
+    },
+    "driver_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Driver names for display"
     }
   },
   "required": [

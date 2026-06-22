@@ -23,7 +23,8 @@ import Drivers from '@/pages/Drivers';
 import Companies from '@/pages/Companies';
 import Locations from '@/pages/Locations';
 import Reports from '@/pages/Reports';
-import DriverPerformance from '@/pages/DriverPerformance';
+import Settings from '@/pages/Settings';
+import DriverGroups from '@/pages/DriverGroups';
 import ProductDoc from '@/pages/ProductDoc';
 
 const AuthenticatedApp = () => {
@@ -64,7 +65,8 @@ const AuthenticatedApp = () => {
           <Route path="/companies" element={<Companies />} />
           <Route path="/locations" element={<Locations />} />
           <Route path="/reports" element={<Reports />} />
-          <Route path="/driver-performance" element={<DriverPerformance />} />
+          <Route path="/driver-groups" element={<DriverGroups />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/product-doc" element={<ProductDoc />} />
         </Route>
       </Route>

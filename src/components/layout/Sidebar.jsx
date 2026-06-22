@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import {
   LayoutDashboard, Package, Truck, Users, Building2,
-  MapPin, X, BarChart2, TrendingUp, FileText
+  MapPin, X, BarChart2, TrendingUp, FileText, Settings, UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -12,10 +12,11 @@ const navItems = [
   { key: 'orders', icon: Package, path: '/orders' },
   { key: 'trucks', icon: Truck, path: '/trucks' },
   { key: 'drivers', icon: Users, path: '/drivers' },
+  { key: 'driverGroups', icon: UserCog, path: '/driver-groups' },
   { key: 'companies', icon: Building2, path: '/companies' },
   { key: 'locations', icon: MapPin, path: '/locations' },
   { key: 'reports', icon: BarChart2, path: '/reports' },
-  { key: 'driverPerf', icon: TrendingUp, path: '/driver-performance' },
+  { key: 'settings', icon: Settings, path: '/settings' },
   { key: 'productDoc', icon: FileText, path: '/product-doc' },
 ];
 

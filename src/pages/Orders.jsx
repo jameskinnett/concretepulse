@@ -11,6 +11,7 @@ import { Plus, Search, Package, AlertTriangle, Truck, DollarSign } from 'lucide-
 import { format } from 'date-fns';
 import NewOrderModal from '@/components/modals/NewOrderModal';
 import OrderDetailModal from '@/components/modals/OrderDetailModal';
+import BroadcastModal from '@/components/modals/BroadcastModal';
 
 const statusColors = {
   new: 'bg-primary/10 text-primary border-primary/20',
@@ -27,6 +28,7 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showNew, setShowNew] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [broadcastOrder, setBroadcastOrder] = useState(null);
 
   const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => base44.entities.Order.list('-created_date', 200) });
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.list() });
@@ -34,6 +36,7 @@ export default function Orders() {
   const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: () => base44.entities.Company.list() });
   const { data: locations = [] } = useQuery({ queryKey: ['locations'], queryFn: () => base44.entities.DeliveryLocation.list() });
   const { data: compensations = [] } = useQuery({ queryKey: ['compensations'], queryFn: () => base44.entities.Compensation.list('-created_date', 200) });
+  const { data: driverGroups = [] } = useQuery({ queryKey: ['driverGroups'], queryFn: () => base44.entities.DriverGroup.list() });
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -76,6 +79,7 @@ export default function Orders() {
             <SelectItem value="assigned">{t('assigned')}</SelectItem>
             <SelectItem value="in_progress">{t('inProgress')}</SelectItem>
             <SelectItem value="delivered">{t('delivered')}</SelectItem>
+            <SelectItem value="cancelled">{t('cancelled')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -142,8 +146,9 @@ export default function Orders() {
         </Table>
       </div>
 
-      <NewOrderModal open={showNew} onClose={() => setShowNew(false)} companies={companies} locations={locations} existingOrders={orders} onRefresh={refresh} />
-      <OrderDetailModal open={!!selectedOrder} onClose={() => setSelectedOrder(null)} order={selectedOrder} trucks={trucks} drivers={drivers} onRefresh={refresh} />
+      <NewOrderModal open={showNew} onClose={() => setShowNew(false)} companies={companies} locations={locations} existingOrders={orders} trucks={trucks} drivers={drivers} driverGroups={driverGroups} onBroadcastOrder={(order) => setBroadcastOrder(order)} onRefresh={refresh} />
+      <OrderDetailModal open={!!selectedOrder} onClose={() => setSelectedOrder(null)} order={selectedOrder} trucks={trucks} drivers={drivers} driverGroups={driverGroups} onBroadcastOrder={(order) => setBroadcastOrder(order)} onRefresh={refresh} />
+      <BroadcastModal open={!!broadcastOrder} onClose={() => setBroadcastOrder(null)} order={broadcastOrder} drivers={drivers} trucks={trucks} driverGroups={driverGroups} onAssigned={refresh} />
     </div>
   );
 }

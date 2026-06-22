@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { Package, Truck, Clock, MapPin, AlertTriangle, ArrowRight, Zap } from 'lucide-react';
+import { Package, Truck, Clock, MapPin, AlertTriangle, ArrowRight, Zap, XCircle, Radio } from 'lucide-react';
 import { format } from 'date-fns';
 import CompensationCalculator from './CompensationCalculator';
+import AssignmentSection from './AssignmentSection';
+import CancelOrderModal from './CancelOrderModal';
+import { useNotifications } from '@/lib/NotificationContext';
+import { useAuth } from '@/lib/AuthContext';
 
 const statusColorMap = {
   new: 'bg-primary/10 text-primary border-primary/20',
@@ -22,11 +24,16 @@ const statusColorMap = {
 
 const statusLabel = { new: 'New', assigned: 'Assigned', in_progress: 'In Progress', delivered: 'Delivered', cancelled: 'Cancelled' };
 
-export default function OrderDetailModal({ open, onClose, order, trucks, drivers, onRefresh }) {
+export default function OrderDetailModal({ open, onClose, order, trucks, drivers, driverGroups = [], onRefresh, onBroadcastOrder }) {
   const { t } = useI18n();
+  const { addNotification } = useNotifications();
+  const { user } = useAuth();
   const [selectedTruck, setSelectedTruck] = useState('');
   const [selectedDriver, setSelectedDriver] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [assignMode, setAssignMode] = useState('manual');
   const [saving, setSaving] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
 
   if (!order) return null;
 
@@ -34,6 +41,7 @@ export default function OrderDetailModal({ open, onClose, order, trucks, drivers
   const availableDrivers = drivers.filter(dr => dr.availability === 'available');
   const assignedDriver = drivers.find(d => d.id === order.assigned_driver_id);
   const estimatedKm = Math.round(10 + Math.random() * 35);
+  const canCancel = ['new', 'assigned', 'in_progress'].includes(order.status);
 
   const handleAssign = async () => {
     const truck = trucks.find(tr => tr.id === selectedTruck);
@@ -49,9 +57,24 @@ export default function OrderDetailModal({ open, onClose, order, trucks, drivers
     });
     await base44.entities.Truck.update(truck.id, { status: 'loading', current_driver_id: driver.id, current_driver_name: driver.name });
     await base44.entities.Driver.update(driver.id, { availability: 'on_route' });
+    await addNotification({
+      title: `Order Assigned: ${order.order_number}`,
+      message: `${driver.name} · Truck ${truck.truck_id} · ${order.company_name}`,
+      type: 'order_assigned',
+      order_id: order.id,
+      order_number: order.order_number,
+      target_roles: ['admin', 'dispatcher'],
+    });
     toast.success('Order assigned!');
     setSaving(false);
     onRefresh();
+    onClose();
+  };
+
+  const handleBroadcast = () => {
+    if (onBroadcastOrder) {
+      onBroadcastOrder(order);
+    }
     onClose();
   };
 
@@ -100,151 +123,216 @@ export default function OrderDetailModal({ open, onClose, order, trucks, drivers
     onClose();
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Package className="w-5 h-5 text-primary" />
-            {order.order_number}
-            <Badge className={`${statusColorMap[order.status]} border ml-1`}>
-              {statusLabel[order.status] || order.status}
-            </Badge>
-            {order.priority === 'urgent' && (
-              <Badge variant="destructive" className="gap-1 ml-0.5">
-                <AlertTriangle className="w-3 h-3" /> Urgent
-              </Badge>
-            )}
-          </DialogTitle>
-        </DialogHeader>
+  const handleCancel = async ({ reason, notes }) => {
+    setSaving(true);
+    const cancelTime = new Date().toISOString();
+    await base44.entities.Order.update(order.id, {
+      status: 'cancelled',
+      cancel_reason: `${reason}${notes ? ': ' + notes : ''}`,
+      cancelled_by: user?.full_name || user?.email || 'Unknown',
+      cancelled_at: cancelTime,
+    });
+    // Free up truck and driver
+    if (order.assigned_truck_id) {
+      await base44.entities.Truck.update(order.assigned_truck_id, { status: 'available', current_driver_id: '', current_driver_name: '' });
+    }
+    if (order.assigned_driver_id) {
+      await base44.entities.Driver.update(order.assigned_driver_id, { availability: 'available' });
+    }
+    await addNotification({
+      title: `Order Cancelled: ${order.order_number}`,
+      message: `${reason} — ${order.company_name}`,
+      type: 'order_cancelled',
+      order_id: order.id,
+      order_number: order.order_number,
+      target_roles: ['admin', 'dispatcher'],
+    });
+    toast.success('Order cancelled');
+    setSaving(false);
+    setShowCancel(false);
+    onRefresh();
+    onClose();
+  };
 
-        <div className="space-y-4">
-          {/* Order info grid */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm bg-muted/40 rounded-xl p-3">
-            <div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('company')}</div>
-              <div className="font-semibold">{order.company_name}</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('location')}</div>
-              <div className="font-semibold truncate">{order.delivery_location_name}</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('mixType')}</div>
-              <div className="font-semibold">{order.mix_type} kg/cm²</div>
-            </div>
-            <div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('quantity')}</div>
-              <div className="font-semibold">{order.quantity_m3} m³</div>
-            </div>
-            {order.scheduled_time && (
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Package className="w-5 h-5 text-primary" />
+              {order.order_number}
+              <Badge className={`${statusColorMap[order.status]} border ml-1`}>
+                {statusLabel[order.status] || order.status}
+              </Badge>
+              {order.priority === 'urgent' && (
+                <Badge variant="destructive" className="gap-1 ml-0.5">
+                  <AlertTriangle className="w-3 h-3" /> Urgent
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Order info grid */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm bg-muted/40 rounded-xl p-3">
               <div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('scheduledTime')}</div>
-                <div className="font-semibold flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {format(new Date(order.scheduled_time), 'MMM d, HH:mm')}
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('company')}</div>
+                <div className="font-semibold">{order.company_name}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('location')}</div>
+                <div className="font-semibold truncate">{order.delivery_location_name}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('mixType')}</div>
+                <div className="font-semibold">{order.mix_type} kg/cm²</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('quantity')}</div>
+                <div className="font-semibold">{order.quantity_m3} m³</div>
+              </div>
+              {order.scheduled_time && (
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('scheduledTime')}</div>
+                  <div className="font-semibold flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {format(new Date(order.scheduled_time), 'MMM d, HH:mm')}
+                  </div>
                 </div>
+              )}
+              {order.assigned_driver_name && (
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Driver</div>
+                  <div className="font-semibold">{order.assigned_driver_name}</div>
+                </div>
+              )}
+              {order.assigned_truck_plate && (
+                <div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Truck</div>
+                  <div className="font-semibold flex items-center gap-1">
+                    <Truck className="w-3 h-3" />
+                    {order.assigned_truck_plate}
+                  </div>
+                </div>
+              )}
+              {order.delivery_address && (
+                <div className="col-span-2">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Address</div>
+                  <div className="text-xs text-muted-foreground flex items-start gap-1">
+                    <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    {order.delivery_address}
+                  </div>
+                </div>
+              )}
+              {order.cancel_reason && (
+                <div className="col-span-2">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('cancelReason')}</div>
+                  <div className="text-xs text-red-600">{order.cancel_reason}</div>
+                  {order.cancelled_by && <div className="text-[10px] text-muted-foreground mt-0.5">by {order.cancelled_by}</div>}
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Actions by status */}
+            {order.status === 'new' && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-bold flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-blue-500" /> {t('assignTruck')}
+                </h4>
+                <AssignmentSection
+                  trucks={trucks}
+                  drivers={drivers}
+                  driverGroups={driverGroups}
+                  selectedTruck={selectedTruck}
+                  selectedDriver={selectedDriver}
+                  selectedGroupId={selectedGroupId}
+                  assignMode={assignMode}
+                  onTruckChange={setSelectedTruck}
+                  onDriverChange={setSelectedDriver}
+                  onGroupChange={setSelectedGroupId}
+                  onAssignModeChange={setAssignMode}
+                />
+                {assignMode === 'manual' ? (
+                  <Button
+                    onClick={handleAssign}
+                    disabled={saving || !selectedTruck || !selectedDriver}
+                    className="w-full h-12 text-sm font-semibold gap-2"
+                  >
+                    <Truck className="w-4 h-4" /> Assign to Truck & Driver
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleBroadcast}
+                    disabled={saving || !selectedGroupId}
+                    className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold gap-2"
+                  >
+                    <Radio className="w-4 h-4" /> {t('broadcastToGroup')}
+                  </Button>
+                )}
               </div>
             )}
-            {order.assigned_driver_name && (
-              <div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Driver</div>
-                <div className="font-semibold">{order.assigned_driver_name}</div>
+
+            {order.status === 'assigned' && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Truck is loading. Ready to depart?</p>
+                <Button
+                  onClick={handleStartDelivery}
+                  disabled={saving}
+                  className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold gap-2"
+                >
+                  <ArrowRight className="w-4 h-4" /> Start Delivery
+                </Button>
               </div>
             )}
-            {order.assigned_truck_plate && (
-              <div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Truck</div>
-                <div className="font-semibold flex items-center gap-1">
-                  <Truck className="w-3 h-3" />
-                  {order.assigned_truck_plate}
-                </div>
+
+            {order.status === 'in_progress' && (
+              <CompensationCalculator
+                order={order}
+                driver={assignedDriver}
+                distanceKm={String(estimatedKm)}
+                onMarkDelivered={handleMarkDelivered}
+                saving={saving}
+              />
+            )}
+
+            {order.status === 'delivered' && (
+              <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-sm text-emerald-700 dark:text-emerald-300">
+                <Zap className="w-4 h-4" />
+                Order completed. Compensation recorded.
               </div>
             )}
-            {order.delivery_address && (
-              <div className="col-span-2">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Address</div>
-                <div className="text-xs text-muted-foreground flex items-start gap-1">
-                  <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                  {order.delivery_address}
-                </div>
+
+            {order.status === 'cancelled' && (
+              <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
+                <XCircle className="w-4 h-4" />
+                Order cancelled. {order.cancel_reason && `Reason: ${order.cancel_reason}`}
               </div>
+            )}
+
+            {/* Cancel button */}
+            {canCancel && order.status !== 'cancelled' && (
+              <Button
+                variant="outline"
+                onClick={() => setShowCancel(true)}
+                disabled={saving}
+                className="w-full h-10 text-destructive border-destructive/30 hover:bg-destructive/5 text-sm gap-2"
+              >
+                <XCircle className="w-4 h-4" /> {t('cancelOrder')}
+              </Button>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <Separator />
-
-          {/* Actions by status */}
-          {order.status === 'new' && (
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold flex items-center gap-2">
-                <Truck className="w-4 h-4 text-blue-500" /> Assign Truck & Driver
-              </h4>
-              <Select value={selectedTruck} onValueChange={setSelectedTruck}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder={t('selectTruck')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTrucks.map(tr => (
-                    <SelectItem key={tr.id} value={tr.id}>
-                      {tr.truck_id} — {tr.plate} ({tr.capacity_m3} m³)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedDriver} onValueChange={setSelectedDriver}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder={t('selectDriver')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableDrivers.map(dr => (
-                    <SelectItem key={dr.id} value={dr.id}>
-                      {dr.name} ({dr.type})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleAssign}
-                disabled={saving || !selectedTruck || !selectedDriver}
-                className="w-full h-12 text-sm font-semibold gap-2"
-              >
-                <Truck className="w-4 h-4" /> Assign to Truck & Driver
-              </Button>
-            </div>
-          )}
-
-          {order.status === 'assigned' && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Truck is loading. Ready to depart?</p>
-              <Button
-                onClick={handleStartDelivery}
-                disabled={saving}
-                className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold gap-2"
-              >
-                <ArrowRight className="w-4 h-4" /> Start Delivery
-              </Button>
-            </div>
-          )}
-
-          {order.status === 'in_progress' && (
-            <CompensationCalculator
-              order={order}
-              driver={assignedDriver}
-              distanceKm={String(estimatedKm)}
-              onMarkDelivered={handleMarkDelivered}
-              saving={saving}
-            />
-          )}
-
-          {order.status === 'delivered' && (
-            <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 text-sm text-emerald-700 dark:text-emerald-300">
-              <Zap className="w-4 h-4" />
-              Order completed. Compensation recorded.
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      <CancelOrderModal
+        open={showCancel}
+        onClose={() => setShowCancel(false)}
+        order={order}
+        onConfirm={handleCancel}
+      />
+    </>
   );
 }

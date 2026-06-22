@@ -1,8 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
-import { Menu, Sun, Moon, LogOut, Truck, ShieldCheck } from 'lucide-react';
+import { Menu, Sun, Moon, LogOut, Truck, ShieldCheck, Settings, Globe } from 'lucide-react';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useRole } from '@/lib/useRole';
 import { Button } from '@/components/ui/button';
@@ -46,18 +47,6 @@ export default function Header({ onMenuClick }) {
 
         {/* Right: controls */}
         <div className="flex items-center gap-1">
-          {/* Language toggle — prominent pill */}
-          <button
-            onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-xs font-semibold text-foreground"
-            title={lang === 'en' ? 'Cambiar a Español' : 'Switch to English'}
-          >
-            <span className="text-base leading-none">{lang === 'en' ? '🇺🇸' : '🇵🇦'}</span>
-            <span>{lang === 'en' ? 'EN' : 'ES'}</span>
-            <span className="text-muted-foreground">→</span>
-            <span>{lang === 'en' ? 'ES' : 'EN'}</span>
-          </button>
-
           <NotificationBell />
 
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="w-9 h-9">
@@ -82,6 +71,16 @@ export default function Header({ onMenuClick }) {
                     <span className="capitalize font-semibold text-foreground">{role}</span>
                   </div>
                 </div>
+                <DropdownMenuItem onClick={() => setLang(lang === 'en' ? 'es' : 'en')}>
+                  <Globe className="w-3.5 h-3.5 mr-2" />
+                  {lang === 'en' ? 'Español' : 'English'}
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings">
+                    <Settings className="w-3.5 h-3.5 mr-2" />
+                    {t('settings')}
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
                   <LogOut className="w-3.5 h-3.5 mr-2" />
                   {t('logout')}

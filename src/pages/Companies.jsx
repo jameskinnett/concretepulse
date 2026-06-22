@@ -20,7 +20,7 @@ const creditColors = {
   cod: 'bg-blue-500/10 text-blue-600',
 };
 
-const defaultForm = { name: '', contact_name: '', contact_phone: '', contact_email: '', credit_status: 'pending', credit_limit: '', notes: '' };
+const defaultForm = { name: '', contact_name: '', contact_phone: '', contact_email: '', billing_contact_name: '', billing_contact_phone: '', billing_contact_email: '', credit_status: 'pending', credit_limit: '', notes: '' };
 
 export default function Companies() {
   const { t } = useI18n();
@@ -35,7 +35,7 @@ export default function Companies() {
 
   const openEdit = (c) => {
     setEditing(c);
-    setForm({ name: c.name, contact_name: c.contact_name || '', contact_phone: c.contact_phone || '', contact_email: c.contact_email || '', credit_status: c.credit_status || 'pending', credit_limit: c.credit_limit || '', notes: c.notes || '' });
+    setForm({ name: c.name, contact_name: c.contact_name || '', contact_phone: c.contact_phone || '', contact_email: c.contact_email || '', billing_contact_name: c.billing_contact_name || '', billing_contact_phone: c.billing_contact_phone || '', billing_contact_email: c.billing_contact_email || '', credit_status: c.credit_status || 'pending', credit_limit: c.credit_limit || '', notes: c.notes || '' });
     setShowForm(true);
   };
 
@@ -135,6 +135,14 @@ export default function Companies() {
                 </Select>
               </div>
               <div><Label className="text-xs">{t('creditLimit')}</Label><Input type="number" value={form.credit_limit} onChange={e => setForm({...form, credit_limit: e.target.value})} placeholder="$" /></div>
+            </div>
+            <div className="border-t border-border pt-3">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('billingInfo')}</Label>
+            </div>
+            <div><Label className="text-xs">{t('billingContact')}</Label><Input value={form.billing_contact_name} onChange={e => setForm({...form, billing_contact_name: e.target.value})} /></div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label className="text-xs">{t('billingPhone')}</Label><Input value={form.billing_contact_phone} onChange={e => setForm({...form, billing_contact_phone: e.target.value})} /></div>
+              <div><Label className="text-xs">{t('billingEmail')}</Label><Input value={form.billing_contact_email} onChange={e => setForm({...form, billing_contact_email: e.target.value})} /></div>
             </div>
             <div><Label className="text-xs">{t('notes')}</Label><Textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={2} /></div>
             <Button onClick={handleSave} className="w-full">{t('save')}</Button>
