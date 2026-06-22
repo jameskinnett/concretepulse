@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import {
   LayoutDashboard, Package, Truck, Users, Building2,
-  MapPin, X, BarChart2, TrendingUp, FileText, Settings, UserCog
+  MapPin, X, BarChart2, TrendingUp, FileText, Settings, UserCog, BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +18,7 @@ const navItems = [
   { key: 'reports', icon: BarChart2, path: '/reports' },
   { key: 'settings', icon: Settings, path: '/settings' },
   { key: 'productDoc', icon: FileText, path: '/product-doc' },
+  { key: 'userGuide', icon: BookOpen, path: '/user-guide' },
 ];
 
 export default function Sidebar({ open, onClose }) {

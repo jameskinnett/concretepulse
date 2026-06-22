@@ -26,6 +26,7 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import DriverGroups from '@/pages/DriverGroups';
 import ProductDoc from '@/pages/ProductDoc';
+import UserGuide from '@/pages/UserGuide';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
           <Route path="/driver-groups" element={<DriverGroups />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/product-doc" element={<ProductDoc />} />
+          <Route path="/user-guide" element={<UserGuide />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
