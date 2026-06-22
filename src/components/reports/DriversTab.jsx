@@ -1,25 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Users, Package, Clock, Trophy, Calendar, Download } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, Package, Clock, Trophy, FileSpreadsheet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { exportDriverPerformance } from '@/lib/pdfExport';
+import { exportToCSV } from '@/lib/csvExport';
 import { useRole } from '@/lib/useRole';
-import { startOfMonth, endOfMonth, subMonths, isWithinInterval, format } from 'date-fns';
 import StatCard from './StatCard';
-
-function getMonthOptions() {
-  const options = [];
-  for (let i = 0; i < 6; i++) {
-    const d = subMonths(new Date(), i);
-    options.push({ value: format(d, 'yyyy-MM'), label: format(d, 'MMMM yyyy'), start: startOfMonth(d), end: endOfMonth(d) });
-  }
-  return options;
-}
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -41,67 +28,70 @@ const PALETTE = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-
 export default function DriversTab({ orders, drivers }) {
   const { t } = useI18n();
   const { canExportReports } = useRole();
-  const MONTHS = useMemo(() => getMonthOptions(), []);
-  const [selectedMonth, setSelectedMonth] = useState(MONTHS[0].value);
-
-  const monthRange = useMemo(() => MONTHS.find(m => m.value === selectedMonth), [MONTHS, selectedMonth]);
-
-  const monthOrders = useMemo(() => {
-    return orders.filter(o => {
-      if (o.status !== 'delivered' || !o.assigned_driver_id || !o.completion_time) return false;
-      return isWithinInterval(new Date(o.completion_time), { start: monthRange.start, end: monthRange.end });
-    });
-  }, [orders, monthRange]);
 
   const driverData = useMemo(() => {
+    const delivered = orders.filter((o) => o.status === 'delivered' && o.assigned_driver_id && o.completion_time);
     const map = new Map();
-    monthOrders.forEach(o => {
+    delivered.forEach((o) => {
       const id = o.assigned_driver_id;
       const name = o.assigned_driver_name || id;
-      if (!map.has(id)) map.set(id, { id, name, orders: 0, hours: 0 });
+      if (!map.has(id)) map.set(id, { id, name, orders: 0, hours: 0, volume: 0 });
       const d = map.get(id);
       d.orders += 1;
+      d.volume += o.quantity_m3 || 0;
       if (o.departure_time && o.completion_time) {
         const h = (new Date(o.completion_time) - new Date(o.departure_time)) / 3600000;
         if (h > 0 && h < 24) d.hours += h;
       }
     });
-    map.forEach((d) => { const found = drivers.find(dr => dr.id === d.id); if (found) d.name = found.name; });
-    return [...map.values()].map(d => ({ ...d, hours: parseFloat(d.hours.toFixed(1)) })).sort((a, b) => b.orders - a.orders);
-  }, [monthOrders, drivers]);
+    map.forEach((d) => {
+      const found = drivers.find((dr) => dr.id === d.id);
+      if (found) {
+        d.name = found.name;
+        d.type = found.type;
+      }
+      d.hours = parseFloat(d.hours.toFixed(1));
+    });
+    return [...map.values()].sort((a, b) => b.orders - a.orders);
+  }, [orders, drivers]);
 
   const topDriver = driverData[0];
-  const totalOrdersMonth = driverData.reduce((s, d) => s + d.orders, 0);
-  const totalHoursMonth = driverData.reduce((s, d) => s + d.hours, 0).toFixed(1);
+  const totalOrders = driverData.reduce((s, d) => s + d.orders, 0);
+  const totalHours = driverData.reduce((s, d) => s + d.hours, 0).toFixed(1);
+  const totalVolume = driverData.reduce((s, d) => s + d.volume, 0);
+
+  const handleCSV = () => {
+    exportToCSV(driverData.map((d) => ({
+      'Driver': d.name,
+      'Type': d.type || '—',
+      'Orders': d.orders,
+      'Hours': d.hours,
+      'Avg h/Order': d.orders > 0 ? (d.hours / d.orders).toFixed(1) : '—',
+      'Volume (m³)': d.volume,
+    })), 'drivers-report');
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Completed deliveries and hours worked per driver</p>
-        <div className="flex items-center gap-2">
-          {canExportReports && (
-            <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs"
-              onClick={() => exportDriverPerformance(driverData.map(d => ({ ...d, type: drivers.find(dr => dr.id === d.id)?.type || '—' })), monthRange.label)}>
-              <Download className="w-3.5 h-3.5" /> Export PDF
-            </Button>
-          )}
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-44 h-9 text-sm gap-2"><Calendar className="w-3.5 h-3.5 text-muted-foreground" /><SelectValue /></SelectTrigger>
-            <SelectContent>{MONTHS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
+        {canExportReports && driverData.length > 0 && (
+          <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs" onClick={handleCSV}>
+            <FileSpreadsheet className="w-3.5 h-3.5" /> {t('exportCSV')}
+          </Button>
+        )}
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="Active Drivers" value={driverData.length} sub="with deliveries this month" />
-        <StatCard icon={Package} label="Total Orders" value={totalOrdersMonth} sub="completed this month" color="text-blue-500" />
-        <StatCard icon={Clock} label="Total Hours" value={`${totalHoursMonth}h`} sub="across all drivers" color="text-amber-500" />
+        <StatCard icon={Users} label="Active Drivers" value={driverData.length} sub="with deliveries" />
+        <StatCard icon={Package} label="Total Orders" value={totalOrders} sub="completed" color="text-blue-500" />
+        <StatCard icon={Clock} label="Total Hours" value={`${totalHours}h`} sub="across all drivers" color="text-amber-500" />
         <StatCard icon={Trophy} label="Top Driver" value={topDriver?.name || '—'} sub={topDriver ? `${topDriver.orders} orders · ${topDriver.hours}h` : 'No data'} color="text-emerald-500" />
       </div>
       {driverData.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
           <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">No completed deliveries this month</p>
-          <p className="text-sm mt-1">Try selecting a different month or complete some orders first.</p>
+          <p className="font-medium">No completed deliveries in this range</p>
+          <p className="text-sm mt-1">Adjust the date range or complete some orders first.</p>
         </div>
       ) : (
         <>
@@ -112,7 +102,7 @@ export default function DriversTab({ orders, drivers }) {
                 <BarChart data={driverData} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => v.length > 14 ? v.slice(0, 12) + '…' : v} />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.length > 14 ? v.slice(0, 12) + '…' : v} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }} />
                   <Bar dataKey="orders" name="Orders" radius={[0, 4, 4, 0]} maxBarSize={26}>{driverData.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}</Bar>
                 </BarChart>
@@ -123,8 +113,8 @@ export default function DriversTab({ orders, drivers }) {
               <ResponsiveContainer width="100%" height={Math.max(220, driverData.length * 48)}>
                 <BarChart data={[...driverData].sort((a, b) => b.hours - a.hours)} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                  <XAxis type="number" tickFormatter={v => `${v}h`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => v.length > 14 ? v.slice(0, 12) + '…' : v} />
+                  <XAxis type="number" tickFormatter={(v) => `${v}h`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.length > 14 ? v.slice(0, 12) + '…' : v} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }} />
                   <Bar dataKey="hours" name="Hours" radius={[0, 4, 4, 0]} maxBarSize={26} fill="hsl(var(--chart-4))" />
                 </BarChart>
@@ -132,7 +122,7 @@ export default function DriversTab({ orders, drivers }) {
             </div>
           </div>
           <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-border"><h2 className="font-semibold text-sm">Driver Breakdown — {monthRange.label}</h2></div>
+            <div className="px-5 py-3 border-b border-border"><h2 className="font-semibold text-sm">Driver Breakdown</h2></div>
             <div className="divide-y divide-border">
               {driverData.map((d, i) => {
                 const avgHoursPerOrder = d.orders > 0 ? (d.hours / d.orders).toFixed(1) : '—';

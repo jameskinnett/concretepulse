@@ -4,12 +4,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Building2, Package, TrendingUp, XCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FileSpreadsheet } from 'lucide-react';
+import { exportToCSV } from '@/lib/csvExport';
+import { useRole } from '@/lib/useRole';
 import StatCard from './StatCard';
 
 const PALETTE = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
 export default function CustomersTab({ orders, companies }) {
   const { t } = useI18n();
+  const { canExportReports } = useRole();
 
   const data = useMemo(() => {
     const map = new Map();
@@ -48,6 +53,17 @@ export default function CustomersTab({ orders, companies }) {
         </div>
       ) : (
         <>
+      {canExportReports && (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs" onClick={() => exportToCSV(data.map(c => ({
+            'Company': c.name, 'Total Orders': c.total, 'Delivered': c.delivered,
+            'Cancelled': c.cancelled, 'Cancel Rate %': c.total > 0 ? Math.round((c.cancelled / c.total) * 100) : 0,
+            'Volume (m³)': c.volume,
+          })), 'customers-report')}>
+            <FileSpreadsheet className="w-3.5 h-3.5" /> {t('exportCSV')}
+          </Button>
+        </div>
+      )}
           <div className="bg-card border border-border rounded-xl p-5">
             <h2 className="font-semibold text-sm mb-4">{t('ordersByCompany')}</h2>
             <ResponsiveContainer width="100%" height={Math.max(220, data.length * 48)}>

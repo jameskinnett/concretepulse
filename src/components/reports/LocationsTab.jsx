@@ -3,8 +3,12 @@ import { useI18n } from '@/lib/i18n';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Clock, TrendingUp, TrendingDown, AlertTriangle, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FileSpreadsheet } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { computeLocationStats, formatDuration } from '@/hooks/useLocationStats';
+import { exportToCSV } from '@/lib/csvExport';
+import { useRole } from '@/lib/useRole';
 import StatCard from './StatCard';
 
 const SORT_OPTIONS = [
@@ -29,6 +33,7 @@ function CustomTooltip({ active, payload }) {
 
 export default function LocationsTab({ orders }) {
   const { t } = useI18n();
+  const { canExportReports } = useRole();
   const [sortBy, setSortBy] = useState('avg_desc');
 
   const deliveredOrders = useMemo(() => orders.filter(o => o.status === 'delivered'), [orders]);
@@ -73,6 +78,16 @@ export default function LocationsTab({ orders }) {
         </div>
       ) : (
         <>
+          {canExportReports && (
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs" onClick={() => exportToCSV(chartData.map(d => ({
+                'Location': d.name, 'Avg Time (min)': d.avgMinutes, 'Min Time (min)': d.minMinutes,
+                'Max Time (min)': d.maxMinutes, 'Deliveries': d.count,
+              })), 'locations-report')}>
+                <FileSpreadsheet className="w-3.5 h-3.5" /> {t('exportCSV')}
+              </Button>
+            </div>
+          )}
           <div className="bg-card border border-border rounded-xl p-5">
             <h2 className="font-semibold text-sm mb-4">Average Delivery Time by Location</h2>
             <ResponsiveContainer width="100%" height={Math.max(280, chartData.length * 52)}>

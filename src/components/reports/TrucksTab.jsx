@@ -4,6 +4,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Truck, Package, CheckCircle2, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FileSpreadsheet } from 'lucide-react';
+import { exportToCSV } from '@/lib/csvExport';
+import { useRole } from '@/lib/useRole';
 import StatCard from './StatCard';
 
 const PALETTE = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
@@ -18,6 +22,7 @@ const statusColors = {
 
 export default function TrucksTab({ orders, trucks }) {
   const { t } = useI18n();
+  const { canExportReports } = useRole();
 
   const data = useMemo(() => {
     const map = new Map();
@@ -56,6 +61,16 @@ export default function TrucksTab({ orders, trucks }) {
         </div>
       ) : (
         <>
+      {canExportReports && (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" className="gap-1.5 h-9 text-xs" onClick={() => exportToCSV(data.map(tr => ({
+            'Truck': tr.name, 'Plate': tr.plate, 'Capacity (m³)': tr.capacity, 'Status': tr.status,
+            'Deliveries': tr.deliveries, 'Volume (m³)': tr.volume,
+          })), 'trucks-report')}>
+            <FileSpreadsheet className="w-3.5 h-3.5" /> {t('exportCSV')}
+          </Button>
+        </div>
+      )}
           <div className="bg-card border border-border rounded-xl p-5">
             <h2 className="font-semibold text-sm mb-4">{t('deliveriesCompleted')} — {t('perTruck')}</h2>
             <ResponsiveContainer width="100%" height={Math.max(220, data.length * 48)}>
