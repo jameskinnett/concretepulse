@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -61,7 +61,7 @@ export default function Companies() {
     refresh();
   };
 
-  const filtered = companies.filter(c => !search || c.name?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(() => companies.filter(c => !search || c.name?.toLowerCase().includes(search.toLowerCase())), [companies, search]);
 
   return (
     <div className="space-y-4">

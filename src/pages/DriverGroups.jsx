@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -66,7 +66,7 @@ export default function DriverGroups() {
     refresh();
   };
 
-  const filtered = groups.filter(g => !search || g.name?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(() => groups.filter(g => !search || g.name?.toLowerCase().includes(search.toLowerCase())), [groups, search]);
 
   return (
     <div className="space-y-4">

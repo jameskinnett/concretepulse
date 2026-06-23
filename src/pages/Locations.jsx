@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -29,7 +29,7 @@ export default function Locations() {
   const { data: orders = [] } = useQuery({ queryKey: ['orders'], queryFn: () => base44.entities.Order.list('-completion_time', 500) });
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['locations'] });
 
-  const locationStats = computeLocationStats(orders);
+  const locationStats = useMemo(() => computeLocationStats(orders), [orders]);
 
   const openEdit = (l) => {
     setEditing(l);
@@ -60,7 +60,7 @@ export default function Locations() {
     refresh();
   };
 
-  const filtered = locations.filter(l => !search || l.name?.toLowerCase().includes(search.toLowerCase()) || l.address?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = useMemo(() => locations.filter(l => !search || l.name?.toLowerCase().includes(search.toLowerCase()) || l.address?.toLowerCase().includes(search.toLowerCase())), [locations, search]);
 
   return (
     <div className="space-y-4">

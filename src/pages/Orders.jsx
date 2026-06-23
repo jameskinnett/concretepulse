@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -45,14 +45,14 @@ export default function Orders() {
     queryClient.invalidateQueries({ queryKey: ['compensations'] });
   };
 
-  const filtered = orders.filter(o => {
+  const filtered = useMemo(() => orders.filter(o => {
     const matchSearch = !search || 
       o.order_number?.toLowerCase().includes(search.toLowerCase()) ||
       o.company_name?.toLowerCase().includes(search.toLowerCase()) ||
       o.delivery_location_name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || o.status === statusFilter;
     return matchSearch && matchStatus;
-  });
+  }), [orders, search, statusFilter]);
 
   return (
     <div className="space-y-4">

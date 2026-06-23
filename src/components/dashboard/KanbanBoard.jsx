@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Clock, Truck, ArrowRight, CheckCircle2, AlertTriangle, Zap, Timer } from 'lucide-react';
@@ -114,11 +114,19 @@ export default function KanbanBoard({ orders, onOrderClick, selectedIds, onToggl
   const columns = ['new', 'assigned', 'in_progress', 'delivered'];
   const columnLabels = { new: t('new'), assigned: t('assigned'), in_progress: t('inProgress'), delivered: t('delivered') };
 
+  const ordersByStatus = useMemo(() => {
+    const grouped = { new: [], assigned: [], in_progress: [], delivered: [] };
+    for (const order of orders) {
+      if (grouped[order.status]) grouped[order.status].push(order);
+    }
+    return grouped;
+  }, [orders]);
+
   return (
     <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:grid-cols-2">
       {columns.map(col => {
         const config = columnConfig[col];
-        const colOrders = orders.filter(o => o.status === col);
+        const colOrders = ordersByStatus[col] || [];
         const Icon = config.icon;
         return (
           <div key={col} className={cn("bg-muted/40 rounded-xl border-t-[3px] p-3 min-h-[280px]", config.color)}>

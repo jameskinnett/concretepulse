@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -64,9 +64,9 @@ export default function Trucks() {
     refresh();
   };
 
-  const filtered = trucks.filter(tr =>
+  const filtered = useMemo(() => trucks.filter(tr =>
     !search || tr.truck_id?.toLowerCase().includes(search.toLowerCase()) || tr.plate?.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [trucks, search]);
 
   return (
     <div className="space-y-4">

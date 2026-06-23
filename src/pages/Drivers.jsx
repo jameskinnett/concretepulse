@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -70,9 +70,9 @@ export default function Drivers() {
     refresh();
   };
 
-  const filtered = drivers.filter(d =>
+  const filtered = useMemo(() => drivers.filter(d =>
     !search || d.name?.toLowerCase().includes(search.toLowerCase()) || d.cedula?.includes(search)
-  );
+  ), [drivers, search]);
 
   return (
     <div className="space-y-4">

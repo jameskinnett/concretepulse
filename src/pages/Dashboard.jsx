@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -58,11 +58,11 @@ export default function Dashboard() {
   };
 
   const clearSelection = () => setSelectedIds(new Set());
-  const locationStats = computeLocationStats(orders);
+  const locationStats = useMemo(() => computeLocationStats(orders), [orders]);
 
   const [filters, setFilters] = useState({ status: 'all', truckId: '', companyId: '' });
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = useMemo(() => orders.filter(order => {
     if (filters.status !== 'all') {
       const active = ['new', 'assigned', 'in_progress'];
       if (filters.status === 'active' && !active.includes(order.status)) return false;
@@ -71,7 +71,7 @@ export default function Dashboard() {
     if (filters.truckId && order.assigned_truck_id !== filters.truckId) return false;
     if (filters.companyId && order.company_id !== filters.companyId) return false;
     return true;
-  });
+  }), [orders, filters]);
 
   const markSelectedDelivered = async () => {
     setBulkUpdating(true);
